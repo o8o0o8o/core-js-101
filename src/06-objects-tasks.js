@@ -20,8 +20,13 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+  this.getArea = function name() {
+    return this.width * this.height;
+  };
+  return this;
 }
 
 
@@ -35,8 +40,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +56,10 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const obj = { ...JSON.parse(json) };
+  Object.setPrototypeOf(obj, proto);
+  return obj;
 }
 
 
@@ -111,32 +118,49 @@ function fromJSON(/* proto, json */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  output: '',
+  outputCombinator: '',
+  element(value) {
+    this.output += value;
+    return this;
+  },
+  id(value) {
+    this.output += `#${value}`;
+    return this;
+  },
+  class(value) {
+    this.output += `.${value}`;
+    return this;
+  },
+  attr(value) {
+    this.output += `[${value}]`;
+    return this;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    this.output += `:${value}`;
+    return this;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    this.output += `::${value}`;
+    return this;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    this.outputCombinator += `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
   },
-
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  stringify() {
+    let result = '';
+    if (this.outputCombinator) {
+      result = this.outputCombinator;
+    } else {
+      result = this.output;
+    }
+    this.output = '';
+    this.outputCombinator = '';
+    return result;
   },
 };
 
