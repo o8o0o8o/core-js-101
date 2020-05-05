@@ -117,50 +117,130 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
-const cssSelectorBuilder = {
-  output: '',
-  outputCombinator: '',
+class ElementSelector {
+  constructor(init, value) {
+    this.output = '';
+    switch (init) {
+      case 'element':
+        this.order = 1;
+        this.element(value);
+        this.elementCounter = 1;
+        break;
+      case 'id':
+        this.order = 2;
+        this.id(value);
+        this.idCounter = 1;
+        break;
+      case 'class':
+        this.order = 3;
+        this.class(value);
+        break;
+      case 'attr':
+        this.order = 4;
+        this.attr(value);
+        break;
+      case 'pseudoClass':
+        this.order = 5;
+        this.pseudoClass(value);
+        break;
+      default:
+        this.order = 6;
+        this.pseudoElement(value);
+        this.pseudoElementCounter = 1;
+        break;
+    }
+  }
+
   element(value) {
-    this.output += value;
-    return this;
+    if (this.order === 1) {
+      if (this.elementCounter === 1) {
+        throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+      }
+      this.output += value;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  id(value) {
+    if (this.order <= 2) {
+      if (this.idCounter === 1) {
+        throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+      }
+      this.output += `#${value}`;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  class(value) {
+    if (this.order <= 3) {
+      this.output += `.${value}`;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  attr(value) {
+    if (this.order <= 4) {
+      this.output += `[${value}]`;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  pseudoClass(value) {
+    if (this.order <= 5) {
+      this.output += `:${value}`;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  pseudoElement(value) {
+    if (this.order <= 6) {
+      if (this.pseudoElementCounter === 1) {
+        throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+      }
+      this.output += `::${value}`;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  stringify() {
+    return this.output;
+  }
+}
+
+const cssSelectorBuilder = {
+  element(value) {
+    return new ElementSelector('element', value);
   },
   id(value) {
-    this.output += `#${value}`;
-    return this;
+    return new ElementSelector('id', value);
   },
   class(value) {
-    this.output += `.${value}`;
-    return this;
+    return new ElementSelector('class', value);
   },
   attr(value) {
-    this.output += `[${value}]`;
-    return this;
+    return new ElementSelector('attr', value);
   },
 
   pseudoClass(value) {
-    this.output += `:${value}`;
-    return this;
+    return new ElementSelector('pseudoClass', value);
   },
 
   pseudoElement(value) {
-    this.output += `::${value}`;
-    return this;
+    return new ElementSelector('pseudoElement', value);
   },
 
   combine(selector1, combinator, selector2) {
-    this.outputCombinator += `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    this.output = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
     return this;
   },
   stringify() {
-    let result = '';
-    if (this.outputCombinator) {
-      result = this.outputCombinator;
-    } else {
-      result = this.output;
-    }
-    this.output = '';
-    this.outputCombinator = '';
-    return result;
+    return this.output;
   },
 };
 
